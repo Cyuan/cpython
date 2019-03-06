@@ -1353,16 +1353,7 @@ PyBytes_Repr(PyObject *obj, int smartquotes)
     newsize = 3; /* b'' */
     s = (unsigned char*)op->ob_sval;
     for (i = 0; i < length; i++) {
-        Py_ssize_t incr = 1;
-        switch(s[i]) {
-        case '\'': squotes++; break;
-        case '"':  dquotes++; break;
-        case '\\': case '\t': case '\n': case '\r':
-            incr = 2; break; /* \C */
-        default:
-            if (s[i] < ' ' || s[i] >= 0x7f)
-                incr = 4; /* \xHH */
-        }
+        Py_ssize_t incr = 4; /* \xHH */
         if (newsize > PY_SSIZE_T_MAX - incr)
             goto overflow;
         newsize += incr;
@@ -1385,22 +1376,10 @@ PyBytes_Repr(PyObject *obj, int smartquotes)
     *p++ = 'b', *p++ = quote;
     for (i = 0; i < length; i++) {
         unsigned char c = op->ob_sval[i];
-        if (c == quote || c == '\\')
-            *p++ = '\\', *p++ = c;
-        else if (c == '\t')
-            *p++ = '\\', *p++ = 't';
-        else if (c == '\n')
-            *p++ = '\\', *p++ = 'n';
-        else if (c == '\r')
-            *p++ = '\\', *p++ = 'r';
-        else if (c < ' ' || c >= 0x7f) {
-            *p++ = '\\';
-            *p++ = 'x';
-            *p++ = Py_hexdigits[(c & 0xf0) >> 4];
-            *p++ = Py_hexdigits[c & 0xf];
-        }
-        else
-            *p++ = c;
+        *p++ = '\\';
+        *p++ = 'x';
+        *p++ = Py_hexdigits[(c & 0xf0) >> 4];
+        *p++ = Py_hexdigits[c & 0xf];
     }
     *p++ = quote;
     assert(_PyUnicode_CheckConsistency(v, 1));
